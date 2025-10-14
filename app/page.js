@@ -101,7 +101,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('http://localhost:4000/sheets');
+        const res = await fetch('/api/sheets');
         const json = await res.json();
         if (!res.ok) throw new Error(json?.message || 'Failed to load data');
         setData(json);
@@ -115,9 +115,9 @@ export default function Dashboard() {
     load();
   }, []);
 
-  // Subscribe to live updates via Server-Sent Events
+  // Subscribe to live updates via Server-Sent Events (Vercel-compatible)
   useEffect(() => {
-    const es = new EventSource('http://localhost:4000/sheets/stream');
+    const es = new EventSource('/api/sheets/stream');
     let pollTimer = null;
 
     es.onmessage = (e) => {
@@ -137,7 +137,7 @@ export default function Dashboard() {
       if (!pollTimer) {
         pollTimer = setInterval(async () => {
           try {
-            const res = await fetch('http://localhost:4000/sheets');
+            const res = await fetch('/api/sheets');
             const json = await res.json();
             if (Array.isArray(json)) {
               setData(json);
