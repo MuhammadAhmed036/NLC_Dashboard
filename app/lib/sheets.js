@@ -53,19 +53,25 @@ export async function fetchSheetData() {
   const rangeEnv = process.env.GOOGLE_SHEET_RANGE; // e.g., "MySheet!A1:Z1000" or "A1:Z1000"
   const sheetNameEnv = process.env.GOOGLE_SHEET_NAME; // e.g., "My Sheet"
 
+  const quoteTitle = (title) => `'${String(title).replace(/'/g, "''")}'`;
+
   let range;
   if (rangeEnv) {
-    let sheetTitle = sheetNameEnv;
-    if (!rangeEnv.includes('!')) {
+    // Always ensure the sheet title is properly quoted, even if provided in rangeEnv
+    if (rangeEnv.includes('!')) {
+      const [titlePart, cellPart] = rangeEnv.split('!', 2);
+      const rawTitle = String(titlePart || '').replace(/^'|'$/g, '');
+      const quotedTitle = quoteTitle(rawTitle);
+      range = `${quotedTitle}!${cellPart || 'A1:Z1000'}`;
+    } else {
+      let sheetTitle = sheetNameEnv;
       if (!sheetTitle) {
         const meta = await sheets.spreadsheets.get({ spreadsheetId, fields: 'sheets.properties.title' });
         sheetTitle = meta.data.sheets?.[0]?.properties?.title;
       }
       if (!sheetTitle) throw new Error('Unable to determine sheet name for range. Set GOOGLE_SHEET_NAME or include sheet in GOOGLE_SHEET_RANGE.');
-      const quotedTitle = `'${String(sheetTitle).replace(/'/g, "''")}'`;
+      const quotedTitle = quoteTitle(sheetTitle);
       range = `${quotedTitle}!${rangeEnv}`;
-    } else {
-      range = rangeEnv;
     }
   } else {
     let sheetTitle = sheetNameEnv;
@@ -74,7 +80,7 @@ export async function fetchSheetData() {
       sheetTitle = meta.data.sheets?.[0]?.properties?.title;
     }
     if (!sheetTitle) throw new Error('Unable to determine sheet name. Set GOOGLE_SHEET_NAME or GOOGLE_SHEET_RANGE.');
-    const quotedTitle = `'${String(sheetTitle).replace(/'/g, "''")}'`;
+    const quotedTitle = quoteTitle(sheetTitle);
     range = `${quotedTitle}!A1:Z1000`;
   }
 
