@@ -1,4 +1,7 @@
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const maxDuration = 60; // allow long-lived SSE connections
 
 import crypto from 'crypto';
 import { fetchSheetData } from '../../../lib/sheets';
@@ -21,6 +24,7 @@ export async function GET(request) {
         currentHash = hash(currentData);
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'init', data: currentData, ts: Date.now() })}\n\n`));
       } catch (err) {
+        console.error('[api/sheets/stream] Initial fetch error:', err?.message || err);
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: err?.message || 'Failed to fetch initial data' })}\n\n`));
       }
 
@@ -41,6 +45,7 @@ export async function GET(request) {
             lastHeartbeat = now;
           }
         } catch (err) {
+          console.error('[api/sheets/stream] Poll error:', err?.message || err);
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: err?.message || 'Polling failed' })}\n\n`));
         }
       }, intervalMs);

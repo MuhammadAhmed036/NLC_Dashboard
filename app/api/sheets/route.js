@@ -1,4 +1,6 @@
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 import { fetchSheetData } from '../../lib/sheets';
 
@@ -10,7 +12,13 @@ export async function GET() {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'Failed to fetch data', message: err?.message || 'Unknown error' }), {
+    const detail = {
+      error: 'Failed to fetch data',
+      message: err?.message || 'Unknown error',
+      code: err?.code,
+    };
+    console.error('[api/sheets] Error:', detail);
+    return new Response(JSON.stringify(detail), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
