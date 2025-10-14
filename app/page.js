@@ -126,6 +126,9 @@ export default function Dashboard() {
         if (msg?.type === 'init' || msg?.type === 'update') {
           setData(msg.data || []);
           setDetectedStatusKey(guessStatusKey(msg.data || []));
+          // If live updates arrive, consider data loaded
+          setLoading(false);
+          setError(null);
         }
       } catch (_) {
         // ignore malformed events
@@ -142,6 +145,8 @@ export default function Dashboard() {
             if (Array.isArray(json)) {
               setData(json);
               setDetectedStatusKey(guessStatusKey(json));
+              setLoading(false);
+              setError(null);
             }
           } catch {}
         }, 10000);
