@@ -12,6 +12,12 @@ function normalizePrivateKey(pk) {
   return pk ? pk.replace(/\\n/g, '\n') : pk;
 }
 
+function stripSurroundingQuotes(s) {
+  if (typeof s !== 'string') return s;
+  // Remove common accidental wrapping quotes from env values
+  return s.replace(/^"|"$/g, '').replace(/^'|'$/g, '');
+}
+
 export function getGoogleCredentials() {
   const raw = process.env.GOOGLE_CREDENTIALS;
   let credentialsError = null;
@@ -26,7 +32,7 @@ export function getGoogleCredentials() {
     credentialsError = new Error('Invalid GOOGLE_CREDENTIALS: provide valid JSON or base64 JSON');
   }
   const client_email = process.env.GOOGLE_CLIENT_EMAIL;
-  let private_key = normalizePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
+  let private_key = normalizePrivateKey(stripSurroundingQuotes(process.env.GOOGLE_PRIVATE_KEY));
   if (client_email && private_key) {
     return { client_email, private_key };
   }
