@@ -94,6 +94,17 @@ export default function Dashboard() {
       if (k3) return k3;
     }
 
+    // NEW: driver name column
+    if (want === 'drivername') {
+      if (normalizedMap.has('drivername')) return normalizedMap.get('drivername');
+      if (normalizedMap.has('driversname')) return normalizedMap.get('driversname');
+      const k4 = keys.find(k => {
+        const nk = normalizeKey(k);
+        return nk.includes('driver') && nk.includes('name');
+      });
+      if (k4) return k4;
+    }
+
     return null;
   };
 
@@ -176,6 +187,7 @@ export default function Dashboard() {
     const trackerKey = findColumnKey(data, 'trackerinstalled');
     const paKey      = findColumnKey(data, 'presentabsent');
     const perfKey    = findColumnKey(data, 'driverperformance');
+    const dnKey      = findColumnKey(data, 'drivername');
 
     for (const row of data) {
       // status
@@ -193,8 +205,15 @@ export default function Dashboard() {
         }
       }
 
+      // gate attendance by driver name not NA
+      let hasDriver = true;
+      if (dnKey) {
+        const dn = normalize(row?.[dnKey]);
+        hasDriver = !!dn && dn !== 'na' && dn !== 'n/a';
+      }
+
       // present/absent
-      if (paKey) {
+      if (paKey && hasDriver) {
         const pv = normalize(row?.[paKey]);
         if (pv === 'p' || pv.includes('present') || pv === 'on' || pv === 'onduty') pres++;
         else if (pv === 'a' || pv.includes('absent') || pv.includes('off') || pv.includes('leave')) abs++;
@@ -242,7 +261,9 @@ export default function Dashboard() {
     { name: 'Satisfactory',value: perfSatisfactory,color: '#34d399' }, // emerald-400
   ];
 
-  // ---------- UI bits ----------
+  // compute attendance total for metrics (exclude NA by gating counts above)
+  const attendanceTotal = presentCount + absentCount;
+
   const PremiumMetric = ({ icon: Icon, title, value, percentage, gradient, accentColor }) => (
     <div className={`group relative overflow-hidden rounded-2xl ${gradient} p-5 shadow-2xl hover:shadow-3xl transition-all duration-500 border border-white/10 hover:border-white/20 hover:-translate-y-1`}>
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -419,8 +440,8 @@ export default function Dashboard() {
             <PremiumMetric
               icon={Users}
               title="Present"
-              value={`${presentCount}/${total}`}
-              percentage={pct(presentCount)}
+              value={`${presentCount}/${attendanceTotal}`}
+              percentage={pct(presentCount, attendanceTotal)}
               gradient="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800"
               accentColor="text-blue-300"
             />
