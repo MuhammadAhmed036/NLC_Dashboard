@@ -6,7 +6,7 @@ First, run the development server:
 
 ```bash
 npm run dev to start frontend
-npm run server to start backend
+npm run server to start backend succesfully
 # or
 yarn dev
 # or
